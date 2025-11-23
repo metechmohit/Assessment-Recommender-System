@@ -7,18 +7,25 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-client = OpenAI(api_key)
-# Load raw CSV
+client = OpenAI(api_key=api_key)
 df = pd.read_csv("data/shl_products_catalog.csv")
+
+# Clean 'duration' column
+numeric_durations_temp = df['duration'].str.extract(r'(\d+)').astype(float)
+average_duration_scalar = numeric_durations_temp.mean().iloc[0]
+df['duration'] = df['duration'].replace('N/A', np.nan)
+df['duration'] = df['duration'].fillna(f"{int(average_duration_scalar)} min")
+if 'duration_cleaned' in df.columns:
+    df = df.drop(columns=['duration_cleaned'])
 
 # Create the embedding text
 df["embedding_text"] = (
-    df["Assessment Name"] + ". " +
-    df["Description"] + ". " +
-    "Test Type: " + df["Test Type Keys"] + ". " +
-    "Duration: " + df["Time"] + ". " +
-    "Remote Testing: " + df["Remote Testing Support"] + ". " +
-    "Adaptive Support: " + df["Adaptive/IRT Support"]
+    df["name"] + ". " +
+    df["description"] + ". " +
+    "Test Type: " + df["test_type"] + ". " +
+    "Duration: " + df["duration"] + "long " +". " +
+    "Remote Testing: " + df["remote_support"] + ". " +
+    "Adaptive Support: " + df["adaptive_support"]
 )
 
 # Generate OpenAI embeddings
