@@ -1,28 +1,37 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import re
+from webdriver_manager.chrome import ChromeDriverManager
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Setup headless Chrome
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-driver = webdriver.Chrome(options=options)
+options.binary_location = '/usr/bin/google-chrome' # Explicitly set Chrome binary location to google-chrome-stable
+
+# Use Service object for Selenium 4+
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=options)
 
 data = []
 
-for start in range(0, 12 * 12, 12):
-    url = f"https://www.shl.com/solutions/products/product-catalog/?start={start}&type=28&type=2"
-
+for start in range(0, 12*32 , 12):
+    url = f"https://www.shl.com/products/product-catalog/?start={start}&type=1"
     try:
         driver.get(url)
         # time.sleep(2)
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        rows = soup.find_all("tr", attrs={"data-course-id": True})
+        rows = soup.find_all("tr", attrs={"data-entity-id": True})
 
         for row in rows:
             title_cell = row.find("td", class_="custom__table-heading__title")
@@ -35,8 +44,6 @@ for start in range(0, 12 * 12, 12):
             adaptive = "Yes" if len(support_cells) > 1 and support_cells[1].find("span", class_="catalogue__circle -yes") else "No"
 
             keys_cell = row.find("td", class_="custom__table-heading__general product-catalogue__keys")
-            # keys = [k.get_text(strip=True) for k in keys_cell.find_all("span")] if keys_cell else []
-            # keys_str = ", ".join(keys)
             key_map = {
                 "A": "Ability & Aptitude",
                 "B": "Biodata & Situational Judgement",
@@ -80,17 +87,18 @@ for start in range(0, 12 * 12, 12):
             full_description = f"{description} | Job Levels: {job_level} | Languages: {languages}"
 
             data.append({
-                "Assessment Name": title,
-                "Assessment URL": href,
-                "Remote Testing Support": remote,
-                "Adaptive/IRT Support": adaptive,
-                "Test Type Keys": keys_str,
-                "Description": full_description,
-                "Time": time_required
+                "name": title,
+                "url": href,
+                "remote_support": remote,
+                "adaptive_support": adaptive,
+                "test_type": keys_str,
+                "description": full_description,
+                "duration": time_required
             })
+            logging.info(f"Successfully scraped {href}") # Log after each detail page is scraped
 
     except Exception as e:
-        print(f"Error scraping {url}: {e}")
+        logging.error(f"Error scraping {url}: {e}") # Use logging.error for exceptions
 
 # Close browser
 driver.quit()
