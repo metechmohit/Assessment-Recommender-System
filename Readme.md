@@ -122,6 +122,7 @@ Get assessment recommendations.
 {
   "recommended_assessments": [
     {
+      "name" : .NET
       "url": "https://www.shl.com/...",
       "adaptive_support": "Yes",
       "description": "Multi-choice test...",
@@ -136,13 +137,6 @@ Get assessment recommendations.
 
 ---
 
-## Sample Queries (from official PDF)
-
-- I am hiring for Java developers who can also collaborate effectively with my business teams.
-- Looking to hire mid-level professionals who are proficient in Python, SQL and Java Script.
-- Here is a JD text, can you recommend some assessment that can help me screen applications. I am hiring for an analyst and wants applications to screen using Cognitive and personality tests
-
----
 
 
 
