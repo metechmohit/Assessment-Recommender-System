@@ -55,7 +55,7 @@ def generate_test_predictions(test_file: str, output_file: str = "predictions.cs
 
 if __name__ == "__main__":
     test_file = "data/test_data.csv"
-    output_file = "output/predictions.csv"
+    output_file = "output/mohit_singh.csv"
     
     predictions_df = generate_test_predictions(test_file, output_file)
     print(f"Predictions saved to {output_file}")
