@@ -3,13 +3,13 @@ import re
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi import Query
-from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 import faiss
 from openai import OpenAI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from models import QueryRequest, AssessmentResponse, RecommendationResponse
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -45,22 +45,6 @@ def get_openai_embedding(text, model="text-embedding-3-small"):
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
-
-# Request model for /recommend
-class QueryRequest(BaseModel):
-    query: str
-
-#  Response model
-class AssessmentResponse(BaseModel):
-    url: str
-    adaptive_support: str
-    description: str
-    duration: int
-    remote_support: str
-    test_type: list[str]
-
-class RecommendationResponse(BaseModel):
-    recommended_assessments: list[AssessmentResponse]
 
 def parse_duration(duration_str):
     match = re.search(r"\d+", str(duration_str)) #to extract only integer from df["Time"]
