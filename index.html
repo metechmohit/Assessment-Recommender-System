@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assessment Recommendations</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+        color: #333;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      .search-container {
+        max-width: 600px;
+        margin: 0 auto 30px auto;
+        display: flex;
+        gap: 10px;
+      }
+
+      input[type='text'] {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+
+      button {
+        padding: 12px 20px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: #1f618d;
+      }
+
+      .cards-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        transition: transform 0.2s ease-in-out;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+      }
+
+      .card h2 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: #2980b9;
+      }
+
+      .card p {
+        margin: 6px 0;
+      }
+
+      .card a {
+        text-decoration: none;
+        color: #2980b9;
+        font-weight: bold;
+      }
+
+      .loader {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #ccc;
+        border-top: 6px solid #2980b9;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 40px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        text-align: center;
+        color: red;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assessment Recommender</h1>
+
+    <div class="search-container">
+      <input
+        type="text"
+        id="queryInput"
+        placeholder="Enter your query (e.g. assessment for a manager position)"
+      />
+      <button onclick="fetchAssessments()">Search</button>
+    </div>
+
+    <div id="loader" class="loader" style="display: none"></div>
+    <div id="errorMessage" class="error"></div>
+    <div id="cardsContainer" class="cards-container"></div>
+
+    <script>
+      // Keep Render backend awake
+      function pingServer() {
+        fetch('https://shl-recommender-system.onrender.com/health').catch(error =>
+          console.error('Ping failed:', error)
+        );
+      }
+      pingServer();
+      setInterval(pingServer, 10 * 60 * 1000);
+    </script>
+
+    <script>
+      function fetchAssessments() {
+        const query = document.getElementById('queryInput').value.trim();
+        const loader = document.getElementById('loader');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const errorMessage = document.getElementById('errorMessage');
+
+        cardsContainer.innerHTML = '';
+        errorMessage.textContent = '';
+
+        if (!query) {
+          errorMessage.textContent = 'Please enter a query.';
+          return;
+        }
+
+        loader.style.display = 'block';
+
+        fetch('https://shl-recommender-system.onrender.com/recommend?frontend=true', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        })
+          .then(res => {
+            loader.style.display = 'none';
+            if (!res.ok) throw new Error('Failed to fetch data.');
+            return res.json();
+          })
+          .then(data => {
+            const assessments = data; 
+            if (!Array.isArray(assessments) || assessments.length === 0) {
+              errorMessage.textContent = 'No assessments found.';
+              return;
+            }
+
+            assessments.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+          
+            card.innerHTML = `
+              <h2>${item["Assessment Name"]}</h2>
+              <p><strong>Description:</strong> ${item["Description"]}</p>
+              <p><strong>Duration:</strong> ${item["Time"]}</p>
+              <p><strong>Remote Support:</strong> ${item["Remote Testing Support"]}</p>
+              <p><strong>Adaptive Support:</strong> ${item["Adaptive/IRT Support"]}</p>
+              <p><strong>Test Type:</strong> ${item["Test Type Keys"]}</p>
+              <p><a href="${item["Assessment URL"]}" target="_blank">View Assessment</a></p>
+            `;
+          
+            cardsContainer.appendChild(card);
+          });
+
+          })
+          .catch(error => {
+            loader.style.display = 'none';
+            errorMessage.textContent = 'Something went wrong. Try again later.';
+            console.error(error);
+          });
+      }
+    </script>
+  </body>
+</html>
