@@ -122,7 +122,7 @@ Get assessment recommendations.
 {
   "recommended_assessments": [
     {
-      "name" : .NET
+      "name" : ".NET"
       "url": "https://www.shl.com/...",
       "adaptive_support": "Yes",
       "description": "Multi-choice test...",
