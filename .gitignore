@@ -1,2 +1,5 @@
 myenv/
 .env
+__pycache__/
+evaluate.py
+evaluation_results.json
